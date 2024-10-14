@@ -1,6 +1,46 @@
 # Project overview
 ...
 
+# Installation
+
+1. **Clone the repository**:
+
+```bash
+git clone https://github.com/YourUsername/repository_name.git
+```
+
+2. **Create an environment**
+
+```bash
+python -m venv 
+```
+
+3. **Activate the environment**
+
+If you're a Windows user type:
+
+```bash
+.\venv\Scripts\activate 
+```
+
+If you're a MacOS/Linux user type (if you're using a bash shell):
+
+```bash
+source ./venv/bin/activate
+```
+
+If you're a MacOS/Linux user type (if you're using a tcsh shell):
+
+```bash
+source ./venv/bin/activate.csh
+```
+
+4. **Install dependencies**:
+
+```bash
+pip install -r requirements.txt
+```
+
 # Questions 
 ...
 
