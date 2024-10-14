@@ -88,7 +88,6 @@ ipykernel==6.29.5
     #   jupyter
     #   jupyter-console
     #   jupyterlab
-    #   qtconsole
 ipython==8.18.1
     # via
     #   ipykernel
@@ -117,7 +116,7 @@ jsonschema==4.23.0
     #   nbformat
 jsonschema-specifications==2023.12.1
     # via jsonschema
-jupyter==1.0.0
+jupyter==1.1.1
     # via project-template (pyproject.toml)
 jupyter-client==8.6.2
     # via
@@ -125,7 +124,6 @@ jupyter-client==8.6.2
     #   jupyter-console
     #   jupyter-server
     #   nbclient
-    #   qtconsole
 jupyter-console==6.6.3
     # via jupyter
 jupyter-core==5.7.2
@@ -138,7 +136,6 @@ jupyter-core==5.7.2
     #   nbclient
     #   nbconvert
     #   nbformat
-    #   qtconsole
 jupyter-events==0.10.0
     # via jupyter-server
 jupyter-lsp==2.2.5
@@ -153,7 +150,9 @@ jupyter-server==2.14.2
 jupyter-server-terminals==0.5.3
     # via jupyter-server
 jupyterlab==4.2.4
-    # via notebook
+    # via
+    #   jupyter
+    #   notebook
 jupyterlab-pygments==0.3.0
     # via nbconvert
 jupyterlab-server==2.27.3
@@ -197,7 +196,7 @@ notebook-shim==0.2.4
     # via
     #   jupyterlab
     #   notebook
-numpy==2.0.1
+numpy==2.0.2
     # via
     #   project-template (pyproject.toml)
     #   contourpy
@@ -214,9 +213,7 @@ packaging==24.1
     #   jupyterlab-server
     #   matplotlib
     #   nbconvert
-    #   qtconsole
-    #   qtpy
-pandas==2.2.2
+pandas==2.2.3
     # via
     #   project-template (pyproject.toml)
     #   seaborn
@@ -251,7 +248,6 @@ pygments==2.18.0
     #   ipython
     #   jupyter-console
     #   nbconvert
-    #   qtconsole
 pyparsing==3.1.2
     # via matplotlib
 python-dateutil==2.9.0.post0
@@ -272,11 +268,6 @@ pyzmq==26.2.0
     #   jupyter-client
     #   jupyter-console
     #   jupyter-server
-    #   qtconsole
-qtconsole==5.5.2
-    # via jupyter
-qtpy==2.4.1
-    # via qtconsole
 referencing==0.35.1
     # via
     #   jsonschema
@@ -348,7 +339,6 @@ traitlets==5.14.3
     #   nbclient
     #   nbconvert
     #   nbformat
-    #   qtconsole
 types-python-dateutil==2.9.0.20240821
     # via arrow
 typing-extensions==4.12.2
