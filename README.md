@@ -9,19 +9,27 @@
 git clone https://github.com/YourUsername/repository_name.git
 ```
 
-2. **Create an environment**
+2. **Install UV**
+
+If you're a MacOS/Linux user type:
 
 ```bash
-python -m venv 
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+If you're a Windows user open an Anaconda Powershell Prompt and type :
+
+```bash
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+3. **Create an environment**
+
+```bash
+uv venv 
 ```
 
 3. **Activate the environment**
-
-If you're a Windows user type:
-
-```bash
-.\venv\Scripts\activate 
-```
 
 If you're a MacOS/Linux user type (if you're using a bash shell):
 
@@ -29,16 +37,22 @@ If you're a MacOS/Linux user type (if you're using a bash shell):
 source ./venv/bin/activate
 ```
 
-If you're a MacOS/Linux user type (if you're using a tcsh shell):
+If you're a MacOS/Linux user type (if you're using a csh/tcsh shell):
 
 ```bash
 source ./venv/bin/activate.csh
 ```
 
+If you're a Windows user type:
+
+```bash
+.\venv\Scripts\activate
+```
+
 4. **Install dependencies**:
 
 ```bash
-pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
 # Questions 
