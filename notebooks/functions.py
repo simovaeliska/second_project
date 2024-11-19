@@ -11,7 +11,16 @@ def clean_df_final_demo():
     df_copy = df_copy.dropna()
     corrected_columns = {"gendr" : "gender", "bal" : "balance"}
     df_copy.rename(columns=corrected_columns, inplace = True)
+    df_copy = df_copy[df_copy['gender'] != 'X']    
+    gender_mapping = {
+    'M': 'Male',
+    'F': 'Female',
+    'U': 'Unknown',
+    }
+    df_copy['gender'] = df_copy['gender'].map(gender_mapping)
     return df_copy
+
+#df_1 = clean_df_final_demo()
 
 # clean df_experiment_clients
 def clean_df_experiment_clients():
