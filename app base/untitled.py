@@ -5,57 +5,118 @@ from streamlit.web import cli as stcli
 from streamlit import runtime
 import sys
 
-# Function to calculate visit time differences (refactor from the previous code)
-def calculate_completion_time_by_visit(group_df):
-    group_df['next_step_time'] = group_df.groupby('client_id')['date_time'].shift(-1)
-    group_df = group_df.dropna(subset=['next_step_time'])
-    group_df['visit_time_diff'] = group_df['next_step_time'] - group_df['date_time']
-    return group_df[['client_id', 'age_group', 'process_step', 'date_time', 'next_step_time', 'visit_time_diff']]
+# Function to display the extracted information
+def process_file(uploaded_file):
+    # Read the file into a DataFrame
+    if uploaded_file.name.endswith('.csv'):
+        df = pd.read_csv(uploaded_file)
+    elif uploaded_file.name.endswith('.txt'):
+        df = pd.read_csv(uploaded_file, delimiter='\t')  # Assuming tab-delimited .txt files
+    else:
+        st.error("Please upload a CSV or TXT file.")
+        return
 
-# Title of the app
-st.title('Client Visit Time Analysis')
+    # Extract column names and number of rows and columns
+    column_names = df.columns.tolist()
+    num_columns = df.shape[1]
+    num_rows = df.shape[0]
 
-# Upload CSV File
-uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
+    # Display basic file info
+    st.subheader("File Information:")
+    st.write(f"Number of Columns: {num_columns}")
+    st.write(f"Number of Rows: {num_rows}")
+    st.write(f"Column Names: {column_names}")
+    
+    # Optionally display the first few rows of the dataset
+    st.subheader("Preview of the File:")
+    st.write(df.head())
 
+    # Button to show basic statistics for numeric columns
+    if st.button("Show Basic Statistics"):
+        show_basic_statistics(df)
+
+    # Button to show demographics (gender and age) statistics
+    if st.button("Show Demographics Analysis"):
+        show_demographics_analysis(df)
+    
+    # Button to show unique values in categorical columns
+    if st.button("Show Unique Values in Categorical Columns"):
+        show_unique_values_in_categorical_columns(df)
+
+# Function to show basic statistics of numeric columns
+def show_basic_statistics(df):
+    # Filter only numeric columns for statistics
+    numeric_df = df.select_dtypes(include=['number'])
+
+    if numeric_df.empty:
+        st.warning("No numeric columns found in the file.")
+        return
+    
+    # Display the basic statistics using pandas describe()
+    st.subheader("Basic Statistics for Numeric Columns:")
+    statistics = numeric_df.describe().T  # Transpose for better readability
+    st.write(statistics)
+
+# Function to show demographics analysis
+def show_demographics_analysis(df):
+    # Analyzing Gender distribution
+    if 'gender' in df.columns:
+        st.subheader("Gender Distribution:")
+        gender_counts = df['gender'].value_counts()
+        st.write(gender_counts)
+
+        # Basic statistics for gender (if any numeric data exists in these groups)
+        if df['gender'].nunique() > 1:
+            st.write("Gender distribution is based on counts.")
+    else:
+        st.warning("No 'gender' column found in the file.")
+
+    # Analyzing Age Group distribution (assuming the presence of 'age' or 'clnt_age' column)
+    age_column = 'clnt_age' if 'clnt_age' in df.columns else 'age'  # Default to 'clnt_age' or 'age'
+    if age_column in df.columns:
+        st.subheader("Age Distribution:")
+        # Bin the age into groups for analysis
+        bins = [0, 30, 40, 50, 100]  # Age bins
+        labels = ['Under 30', '30-39', '40-49', '50 and above']  # Age group labels
+        df['age_group'] = pd.cut(df[age_column], bins=bins, labels=labels)
+
+        # Display count of each age group
+        age_group_counts = df['age_group'].value_counts()
+        st.write(age_group_counts)
+
+        # Basic statistics for age groups
+        st.subheader("Basic Statistics for Age:")
+        age_stats = df[age_column].describe()  # Get statistics for age column
+        st.write(age_stats)
+
+    else:
+        st.warning("No 'age' or 'clnt_age' column found in the file.")
+
+# Function to show unique values in categorical columns
+def show_unique_values_in_categorical_columns(df):
+    # Select categorical columns
+    categorical_columns = df.select_dtypes(include=['object', 'category']).columns.tolist()
+    
+    if not categorical_columns:
+        st.warning("No categorical columns found in the file.")
+        return
+
+    # Display unique values for each categorical column
+    st.subheader("Unique Values in Categorical Columns:")
+    for col in categorical_columns:
+        unique_values = df[col].unique()
+        st.write(f"Column: {col}")
+        st.write(f"Unique Values: {unique_values}")
+        st.write("------")
+
+# App title
+st.title("File Column Extractor and Viewer")
+
+# File uploader
+uploaded_file = st.file_uploader("Upload a CSV or TXT file", type=["csv", "txt"])
+
+# Process the file if uploaded
 if uploaded_file is not None:
-    # Read uploaded CSV file into a DataFrame
-    df_merged = pd.read_csv(uploaded_file)
-
-    # Display the first few rows of the uploaded dataset
-    st.subheader('Preview of the uploaded data:')
-    st.write(df_merged.head())
-
-    # Convert date_time column to datetime if it's not already
-    df_merged['date_time'] = pd.to_datetime(df_merged['date_time'], errors='coerce')
-
-    # Define age bins and labels
-    bins = [0, 30, 40, 50, 100]
-    labels = ['Under 30', '30-39', '40-49', '50 and above']
-
-    # Categorize ages into the defined bins and add a new 'age_group' column
-    df_merged['age_group'] = pd.cut(df_merged['clnt_age'], bins=bins, labels=labels)
-
-    # Filter for the test group only
-    test_group = df_merged[df_merged['variation'] == 'Test']
-
-    # Sort by client_id and date_time to ensure chronological order of visits
-    test_group = test_group.sort_values(by=['client_id', 'date_time'])
-
-    # Apply the function to calculate visit time differences for the test group
-    test_group_visit_times = calculate_completion_time_by_visit(test_group)
-
-    # Display the result in the app
-    st.subheader('Visit Time Differences for Test Group:')
-    st.write(test_group_visit_times)
-
-    # Optionally save the result to a CSV file
-    st.download_button(
-        label="Download visit times data",
-        data=test_group_visit_times.to_csv(index=False),
-        file_name="test_group_visit_times.csv",
-        mime="text/csv"
-    )
-
+    process_file(uploaded_file)
 else:
-    st.info('Please upload a CSV file to start the analysis.')
+    st.info("Please upload a CSV or TXT file to extract column names, file information, basic statistics, demographics analysis, and unique values analysis.")
