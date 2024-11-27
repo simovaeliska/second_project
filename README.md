@@ -1,5 +1,31 @@
 # Project overview
-...
+
+An A/B test was set into motion from 3/15/2017 to 6/20/2017 by the Vanguard team.
+
+Control Group: Clients interacted with Vanguard’s traditional online process.
+Test Group: Clients experienced the new, spruced-up digital interface.
+
+* Day 1 & 2 (Week 5)
+EDA & Data Cleaning
+Client behavior analysis - explained below (trying to find relations and come up with hypothesis)
+* Day 3 (Week 5)
+Performance Metrics
+Success Indicators
+Redesign Outcome
+* Day 4 & 5 (Week 5)
+Hypothesis Testing
+Completion Rate
+Completion Rate with a Cost-Effectiveness Threshold
+Other Hypothesis Examples
+Experiment Evaluation
+Design Effectiveness
+Duration Assessment
+Additional Data Needs
+* Day 1 & 2 (Week 6)
+Tableau
+Tableau Tasks
+* Day 3 & 4 (Week 6)
+
 
 # Installation
 
