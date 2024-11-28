@@ -1,6 +1,8 @@
+# pages/demographics.py
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+from data_loader import load_data
 
 # Function to perform demographic analysis
 def analyze_demographics(df, control_group_sorted, test_group_sorted):

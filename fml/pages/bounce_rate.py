@@ -1,7 +1,8 @@
-#pages\bounce_rate.py
+#bounce_rate.py
 import streamlit as st
 import pandas as pd
 from scipy.stats import norm
+from data_loader import load_data
 
 # Function to calculate counts for z-test
 def calculate_counts(group):

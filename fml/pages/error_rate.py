@@ -2,6 +2,7 @@
 import streamlit as st
 import pandas as pd
 from scipy.stats import binomtest, ttest_ind
+from data_loader import load_data
 
 # Function to calculate errors
 def calculate_errors(group):

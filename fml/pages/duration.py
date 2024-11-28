@@ -1,6 +1,7 @@
 #pages/duration.py
 import streamlit as st
 import pandas as pd  # Ensure pandas is imported
+from data_loader import load_data
 
 def show_process_duration(df):
     st.title("Process Duration Analysis")

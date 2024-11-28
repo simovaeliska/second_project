@@ -1,6 +1,7 @@
 # pages/summary.py
 import streamlit as st
 import pandas as pd
+from data_loader import load_data
 
 def show_data_summary(df):
     st.subheader("CSV Data Overview")

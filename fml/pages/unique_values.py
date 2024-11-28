@@ -1,6 +1,7 @@
 # pages/unique_values.py
 import streamlit as st
 import pandas as pd
+from data_loader import load_data
 
 def show_unique_values_in_categorical_columns(df):
     st.title("Unique Values in Categorical Columns")

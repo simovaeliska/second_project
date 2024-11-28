@@ -1,5 +1,5 @@
 # app.py
-import pandas as pd
+# app.py
 import streamlit as st
 from data_loader import load_data  # Assuming load_data is in the data_loader.py file
 from pages import about, summary, unique_values, stats, demographics, hypothesistestcompletionrate, duration, completion, error_rate
@@ -13,12 +13,14 @@ def main():
     """
     st.set_page_config(page_title="A/B Test Demo for Group 7")
     
-    # Load the data here
-    df = load_data()
+    # Provide the correct path to the CSV
+    data_path = "path_to_your_data.csv"  # Make sure this path is correct
 
-    # If df is None, show an error and don't continue
+    # Load the data from data_loader
+    df = load_data(data_path)
+
     if df is None:
-        st.error("Data could not be loaded.")
+        st.error("Data could not be loaded. Please check your file path or data source.")
         return
 
     # Sort the data into control and test groups
@@ -27,13 +29,6 @@ def main():
 
     control_group_sorted = control_group.sort_values(by=['client_id', 'visit_id', 'process_step', 'date_time'])
     test_group_sorted = test_group.sort_values(by=['client_id', 'visit_id', 'process_step', 'date_time'])
-
-    # Add age categorization (as it seems to be a necessary step in some of the analysis)
-    bins = [0, 30, 40, 50, 100] 
-    labels = ['Under 30', '30-39', '40-49', '50 and above']
-    df['age_group'] = pd.cut(df['clnt_age'], bins=bins, labels=labels)
-    control_group_sorted['age_group'] = pd.cut(control_group_sorted['clnt_age'], bins=bins, labels=labels)
-    test_group_sorted['age_group'] = pd.cut(test_group_sorted['clnt_age'], bins=bins, labels=labels)
 
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Select a page:", [
@@ -45,7 +40,7 @@ def main():
         "Hypothesis Testing Completion Rate", 
         "Process Duration Analysis",  
         "Completion Time Analysis",
-        "Error Rate Hypothesis Testing"  # Added Error Rate Hypothesis Testing
+        "Error Rate Hypothesis Testing"
     ])
 
     # Handle page navigation and pass the df and sorted groups to the page
@@ -58,7 +53,7 @@ def main():
     elif page == "Basic Statistics":
         stats.show_basic_statistics(df)
     elif page == "Demographics Analysis":
-        demographics.show_demographics(df, control_group_sorted, test_group_sorted)  # Pass sorted groups here
+        demographics.show_demographics(df, control_group_sorted, test_group_sorted)
     elif page == "Hypothesis Testing Completion Rate":
         hypothesistestcompletionrate.show_page(df)
     elif page == "Process Duration Analysis":
@@ -66,7 +61,7 @@ def main():
     elif page == "Completion Time Analysis":
         completion.show_completion_time(df)
     elif page == "Error Rate Hypothesis Testing":
-        error_rate.show_error_rate_analysis(df)  # Link to error_rate.py
+        error_rate.show_error_rate_analysis(df)
 
 if __name__ == "__main__":
     main()
