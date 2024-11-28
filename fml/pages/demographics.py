@@ -1,10 +1,9 @@
-# pages/demographics.py
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
 # Function to perform demographic analysis
-def analyze_demographics(df):
+def analyze_demographics(df, control_group_sorted, test_group_sorted):
     """
     Function to perform demographic analysis and generate interactive plots using Plotly.
     """
@@ -80,8 +79,65 @@ def analyze_demographics(df):
     )
     st.plotly_chart(fig3)
 
+    # *** Age Group by Test & Control ***
+    st.write("### Test & Control Grouped by Age Group")
+    # Filter based on unique client_id in control and test groups
+    control_unique = control_group_sorted.drop_duplicates(subset='client_id')
+    test_unique = test_group_sorted.drop_duplicates(subset='client_id')
+
+    # Calculate age group distribution for each group
+    control_age_group = control_unique["age_group"].value_counts()
+    test_age_group = test_unique["age_group"].value_counts()
+
+    # Combine data into one table
+    age_groups_concat = pd.concat(
+        [control_age_group, test_age_group], 
+        axis=1, 
+        keys=["Control Group Count", "Test Group Count"]
+    )
+
+    # Rename the columns for clarity
+    age_groups_concat = age_groups_concat.sort_values(by="age_group", ascending=True)  # sort values
+    age_groups_concat = age_groups_concat.reset_index()
+
+    st.write(age_groups_concat)
+
+    # *** Age Group x Gender ***
+    st.write("### Age Group x Gender")
+    control_age_group_gender = control_unique.groupby("age_group")["gender"].value_counts().unstack()
+    test_age_group_gender = test_unique.groupby("age_group")["gender"].value_counts().unstack()
+
+    # Reset the index to create a proper DataFrame structure
+    control_age_group_gender = control_age_group_gender.reset_index()
+    test_age_group_gender = test_age_group_gender.reset_index()
+
+    st.write("Control Group - Age Group x Gender:")
+    st.write(control_age_group_gender)
+
+    st.write("Test Group - Age Group x Gender:")
+    st.write(test_age_group_gender)
+
+    # *** Age Group x Balances ***
+    st.write("### Age Group x Balances")
+    # Filter control and test group based on unique client_id
+    control_age_group_balance = control_unique.groupby("age_group")["balance"].mean().round(2)
+    test_age_group_balance = test_unique.groupby("age_group")["balance"].mean().round(2)
+
+    # Convert the grouped Series to DataFrames
+    control_age_group_balance_df = control_age_group_balance.reset_index()
+    test_age_group_balance_df = test_age_group_balance.reset_index()
+
+    # Rename the columns for clarity
+    control_age_group_balance_df.rename(columns={"age_group": "Age Group", "balance": "Control Group Balance"}, inplace=True)
+    test_age_group_balance_df.rename(columns={"age_group": "Age Group", "balance": "Test Group Balance"}, inplace=True)
+
+    # Merge both control and test balance data into a single table
+    balance_concat = pd.merge(control_age_group_balance_df, test_age_group_balance_df, on="Age Group")
+
+    st.write(balance_concat)
+
 # Function to display the demographics analysis in Streamlit
-def show_demographics(df):
+def show_demographics(df, control_group_sorted, test_group_sorted):
     """
     Show Demographics Analysis in the Streamlit app.
     This function is used to call the analysis and display the results.
@@ -89,7 +145,27 @@ def show_demographics(df):
     st.title("Demographics Analysis")
 
     # Perform the demographic analysis (aggregation and plotting)
-    analyze_demographics(df)
+    analyze_demographics(df, control_group_sorted, test_group_sorted)
 
-    # Add some explanation or results display here
-    st.write("Demographics analysis will be displayed here, including charts and tables.")
+    # Additional notes or user guidance
+    st.write("""
+        This page provides demographic analysis, including average number of accounts, calls, 
+        and logons, based on age groups and gender. The plots above allow you to explore how 
+        these variables differ across age groups and between genders.
+    """)
+
+# Sorting Control and Test Groups in the main app.py or wherever necessary:
+def sort_groups(df_merged):
+    """
+    Function to sort control and test groups based on client_id, visit_id, process_step, and date_time.
+    """
+    control_group = df_merged[df_merged['variation'] == 'Control']
+    test_group = df_merged[df_merged['variation'] == 'Test']
+
+    # Sort control group
+    control_group_sorted = control_group.sort_values(by=['client_id', 'visit_id', 'process_step', 'date_time'])
+
+    # Sort test group
+    test_group_sorted = test_group.sort_values(by=['client_id', 'visit_id', 'process_step', 'date_time'])
+
+    return control_group_sorted, test_group_sorted
