@@ -1,117 +1,87 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
+from scipy import stats
 
-# Function to display the extracted information
-def process_file(uploaded_file):
-    # Read the file into a DataFrame
-    if uploaded_file.name.endswith('.csv'):
-        df = pd.read_csv(uploaded_file)
-    elif uploaded_file.name.endswith('.txt'):
-        df = pd.read_csv(uploaded_file, delimiter='\t')  # Assuming tab-delimited .txt files
-    else:
-        st.error("Please upload a CSV or TXT file.")
-        return
+# Function to load the CSV file and show information
+@st.cache_data
+def load_data():
+    url = r"C:\Users\Cecilia\Downloads\ironhack\coursework\group_work\group_project_week5_6\second_project\data\clean\combined_cleaned_data.csv"
+    try:
+        df = pd.read_csv(url)
+        return df
+    except FileNotFoundError:
+        st.error("File not found. Please check the file path.")
+        return None
 
-    # Convert date_time to datetime format
-    df['date_time'] = pd.to_datetime(df['date_time'], errors='coerce')  # Coerce invalid formats to NaT
-
-    # Extract column names and number of rows and columns
-    column_names = df.columns.tolist()
-    num_columns = df.shape[1]
-    num_rows = df.shape[0]
-
-    # Display basic file info
-    st.subheader("File Information:")
-    st.write(f"Number of Columns: {num_columns}")
-    st.write(f"Number of Rows: {num_rows}")
-    st.write(f"Column Names: {column_names}")
+# Function to show the About the Project page
+def show_about_project():
+    st.title("About the Project")
     
-    # Optionally display the first few rows of the dataset
-    st.subheader("Preview of the File:")
-    st.write(df.head())
+    st.header("Project Overview")
+    st.write(
+        """
+        An A/B test was set into motion from 3/15/2017 to 6/20/2017 by the Vanguard team.
 
-    # Process additional analysis
-    if st.button("Show Unique Values in Categorical Columns"):
-        show_unique_values_in_categorical_columns(df)
+        Control Group: Clients interacted with Vanguard’s traditional online process.
+        Test Group: Clients experienced the new, spruced-up digital interface.
 
-    if st.button("Show Basic Statistics"):
-        show_basic_statistics(df)
+        * Day 1 & 2 (Week 5)
+        EDA & Data Cleaning
+        Client behavior analysis - explained below (trying to find relations and come up with hypothesis)
+        * Day 3 (Week 5)
+        Performance Metrics
+        Success Indicators
+        Redesign Outcome
+        * Day 4 & 5 (Week 5)
+        Hypothesis Testing
+        Completion Rate
+        Completion Rate with a Cost-Effectiveness Threshold
+        Other Hypothesis Examples
+        Experiment Evaluation
+        Design Effectiveness
+        Duration Assessment
+        Additional Data Needs
+        * Day 1 & 2 (Week 6)
+        Tableau
+        Tableau Tasks
+        * Day 3 & 4 (Week 6)
+        """
+    )
 
-    if st.button("Show Demographics Analysis"):
-        show_demographics_analysis(df)
+    st.header("Getting Started")
+    st.write(
+        """
+        ## Metadata
+        This comprehensive set of fields will guide your analysis, helping you unravel the intricacies of client behavior and preferences.
 
-    if st.button("Show Tenure Analysis by Age and Gender"):
-        show_tenure_plot(df)
+        - **client_id**: Every client’s unique ID.
+        - **variation**: Indicates if a client was part of the experiment.
+        - **visitor_id**: A unique ID for each client-device combination.
+        - **visit_id**: A unique ID for each web visit/session.
+        - **process_step**: Marks each step in the digital process.
+        - **date_time**: Timestamp of each web activity.
+        - **clnt_tenure_yr**: Represents how long the client has been with Vanguard, measured in years.
+        - **clnt_tenure_mnth**: Further breaks down the client’s tenure with Vanguard in months.
+        - **clnt_age**: Indicates the age of the client.
+        - **gendr**: Specifies the client’s gender.
+        - **num_accts**: Denotes the number of accounts the client holds with Vanguard.
+        - **bal**: Gives the total balance spread across all accounts for a particular client.
+        - **calls_6_mnth**: Records the number of times the client reached out over a call in the past six months.
+        - **logons_6_mnth**: Reflects the frequency with which the client logged onto Vanguard’s platform over the last six months.
 
-    if st.button("Show Latest Starts Filtered"):
-        show_latest_starts(df)
+        ## Bonus: Additional Tasks (Optional)
+        If you complete all of the tasks and have some extra time before the presentation, you can explore the following additional questions and tasks:
 
-    if st.button("Calculate Completion Time and Filter Outliers"):
-        calculate_and_display_completion_time(df)
-
-    if st.button("Calculate Process Duration"):
-        calculate_and_display_process_duration(df)
-
-    if st.button("Calculate Process Duration Without Outliers"):
-        calculate_process_duration_without_outliers(df)
-
-    if st.button("Calculate Within-Visit Completion Rate"):
-        calculate_within_visit_completion_rate(df)
-
-    if st.button("Calculate Error Rate"):
-        calculate_and_display_error_rate(df)
-
-    if st.button("Calculate Bounce Rate"):
-        calculate_and_display_bounce_rate(df)
-
-# Function to calculate the drop-off (bounce) rate
-def calculate_dropoff_rate(group):
-    steps = ['start', 'step_1', 'step_2', 'step_3', 'confirm']
-    dropoff_rates = {}  # To store the drop-off percentages at each step
-    
-    # Count the drop-offs at each step
-    for i in range(len(steps) - 1):
-        current_step = steps[i]
-        next_step = steps[i + 1]
-        # Find the total number of clients who started at current_step
-        started = group[group['process_step'] == current_step]['client_id'].nunique()
-        # Find the number of clients who reached the next step
-        reached_next = group[group['process_step'] == next_step]['client_id'].nunique()
-        # Calculate the drop-off rate as a percentage
-        if started > 0:
-            dropoff_rate = ((started - reached_next) / started) * 100
-        else:
-            dropoff_rate = 0
-        
-        dropoff_rates[current_step] = dropoff_rate
-    
-    return dropoff_rates
-
-# Function to calculate and display the bounce rates
-def calculate_and_display_bounce_rate(df):
-    # Filter the control and test groups
-    control_group_sorted = df[df['variation'] == 'Control']
-    test_group_sorted = df[df['variation'] == 'Test']
-
-    # Calculate drop-off rates for both groups
-    control_dropoff_rate = calculate_dropoff_rate(control_group_sorted)
-    test_dropoff_rate = calculate_dropoff_rate(test_group_sorted)
-
-    # Display the drop-off rates for control group
-    st.subheader("Control Group Bounce Rates (%):")
-    for step, rate in control_dropoff_rate.items():
-        st.write(f"{step}: {rate:.2f}%")
-    
-    # Display the drop-off rates for test group
-    st.subheader("Test Group Bounce Rates (%):")
-    for step, rate in test_dropoff_rate.items():
-        st.write(f"{step}: {rate:.2f}%")
+        # Client Behavior Analysis
+        Power and Effect Size
+        Streamlit
+        Add Streamlit to your project to achieve Customization and Real-time Analysis
+        """
+    )
 
 # Function to show unique values in categorical columns
 def show_unique_values_in_categorical_columns(df):
+    st.title("Unique Values in Categorical Columns")
     categorical_columns = df.select_dtypes(include=['object', 'category']).columns.tolist()
     
     if not categorical_columns:
@@ -119,13 +89,12 @@ def show_unique_values_in_categorical_columns(df):
         return
 
     st.subheader("Unique Values in Categorical Columns:")
-    for col in categorical_columns:
-        unique_values = df[col].unique()
-        st.write(f"Column: {col}")
-        st.write(f"Unique Values: {unique_values}")
-        st.write("------")
+    for column in categorical_columns:
+        unique_values = df[column].unique()
+        st.write(f"Column: {column}")
+        st.write(f"Unique values: {unique_values}")
 
-# Function to show basic statistics of numeric columns
+# Function to show basic statistics for numeric columns
 def show_basic_statistics(df):
     numeric_df = df.select_dtypes(include=['number'])
 
@@ -139,68 +108,156 @@ def show_basic_statistics(df):
 
 # Function to show demographics analysis
 def show_demographics_analysis(df):
-    if 'gender' in df.columns:
-        st.subheader("Gender Distribution:")
-        gender_counts = df['gender'].value_counts()
-        st.write(gender_counts)
+    # Display column names to debug and confirm if they exist
+    st.write("Columns in the dataset:", df.columns)
 
-    age_column = 'clnt_age' if 'clnt_age' in df.columns else 'age'
-    
-    if age_column in df.columns:
-        st.subheader("Age Distribution:")
-        bins = [0, 30, 40, 50, 100]
-        labels = ['Under 30', '30-39', '40-49', '50 and above']
-        df['age_group'] = pd.cut(df[age_column], bins=bins, labels=labels)
+    # Ensure 'client_id', 'clnt_age', 'gender', and 'variation' columns exist in your DataFrame
+    required_columns = ['client_id', 'clnt_age', 'gender', 'variation']
+    missing_columns = [col for col in required_columns if col not in df.columns]
 
-        age_group_counts = df['age_group'].value_counts()
-        st.write(age_group_counts)
-
-        st.subheader("Basic Statistics for Age:")
-        age_stats = df[age_column].describe()
-        st.write(age_stats)
-    else:
-        st.warning("No 'age' or 'clnt_age' column found in the file.")
-
-# Function to show the plot for tenure analysis by age and gender
-def show_tenure_plot(df):
-    if 'clnt_tenure_yr' not in df.columns or 'age_group' not in df.columns or 'gender' not in df.columns:
-        st.warning("The dataset is missing necessary columns for the tenure analysis (clnt_tenure_yr, age_group, gender).")
+    if missing_columns:
+        st.error(f"Required columns are missing: {', '.join(missing_columns)}")
         return
+    
+    # Create age groups for demographics analysis
+    bins = [18, 30, 40, 50, 60, 100]  # Adjust the age ranges as needed
+    labels = ['18-29', '30-39', '40-49', '50-59', '60+']
+    
+    # Group by 'client_id' and assign age groups to 'age_group'
+    df['age_group'] = pd.cut(df['clnt_age'], bins=bins, labels=labels, right=False)
+    
+    # Group by 'client_id' and create a gender column based on 'gender'
+    df['gender_group'] = df['gender']
+    
+    # Keep 'variation' as is (without creating a separate column) to represent Test/Control groups
+    df['variation_group'] = df['variation'].apply(lambda x: 'Test' if x == 1 else 'Control')
 
-    grouped = df.groupby(['age_group', 'gender'], as_index=False).agg({'clnt_tenure_yr': 'mean'})
+    # Display age group counts by 'client_id'
+    st.subheader("Demographics: Age Groups")
+    st.write(df.groupby('client_id')['age_group'].first().value_counts())
 
-    sns.set(style="whitegrid")
-    plt.figure(figsize=(10, 6))
-    sns.barplot(data=grouped, x='age_group', y='clnt_tenure_yr', hue='gender')
-    plt.title('Average Tenure by Age and Gender')
-    plt.xlabel('Age group')
-    plt.ylabel('Average tenure in years')
-    plt.legend(title='Gender')
-    plt.xticks(rotation=45)
-    plt.tight_layout()
+    # Display gender group counts by 'client_id'
+    st.subheader("Demographics: Gender Distribution")
+    st.write(df.groupby('client_id')['gender_group'].first().value_counts())
 
-    st.pyplot(plt)
+    # Display Test/Control group counts by 'client_id' using the 'variation' column
+    st.subheader("Demographics: Test/Control Group Distribution")
+    st.write(df.groupby('client_id')['variation'].first().apply(lambda x: 'Test' if x == 1 else 'Control').value_counts())
 
-# Function to filter the latest "start" process step
+    # Show the top 5 rows with client demographics (age, gender, variation)
+    st.subheader("Top 5 Rows of Client Demographics (Age, Gender, Group)")
+    st.write(df[['client_id', 'age_group', 'gender_group', 'variation_group']].drop_duplicates().head())
+
+    # Display available columns for further analysis
+    st.write(f"Available columns in the dataset: {df.columns}")
+    
+    # Display all client details (age, gender, group) if needed
+    st.subheader("Client Demographic Details")
+    st.write(df[['client_id', 'clnt_age', 'gender', 'variation']].head())
+
+# Function for two-proportion z-test
+def two_proportion_z_test(p1, p2, n1, n2):
+    P = (p1 * n1 + p2 * n2) / (n1 + n2)
+    SE = (P * (1 - P) * (1 / n1 + 1 / n2)) ** 0.5
+    z = (p1 - p2) / SE
+    p_value = 2 * (1 - stats.norm.cdf(abs(z)))  # Two-tailed test
+    return z, p_value
+
+# Function to show hypothesis testing page
+def show_hypothesis_testing_page(df):
+    st.title("Hypothesis Testing for Completion Rates")
+    
+    available_columns = df.columns
+    st.write(f"Available columns in the dataset: {available_columns}")
+
+    if 'completion_rate' not in available_columns:
+        if 'completed_visits' in available_columns and 'started_visits' in available_columns:
+            df['completion_rate'] = df['completed_visits'] / df['started_visits'] * 100
+        else:
+            st.error("Missing required columns ('completed_visits' or 'started_visits') to calculate 'completion_rate'.")
+            return
+
+    control_group = df[df['variation'] == 'Control']
+    test_group = df[df['variation'] == 'Test']
+
+    steps = ['confirm', 'step_1', 'step_2', 'step_3']
+
+    for step in steps:
+        st.subheader(f"Step: {step}")
+        
+        control_completions = control_group[control_group['process_step'] == step]['completion_rate'].values[0]
+        test_completions = test_group[test_group['process_step'] == step]['completion_rate'].values[0]
+        
+        control_total = control_group[control_group['process_step'] == step]['started_visits'].values[0]
+        test_total = test_group[test_group['process_step'] == step]['started_visits'].values[0]
+
+        p_control = control_completions / 100
+        p_test = test_completions / 100
+        
+        z_stat, p_value = two_proportion_z_test(p_control, p_test, control_total, test_total)
+        
+        st.write(f"Z-statistic: {z_stat:.4f}")
+        st.write(f"P-value: {p_value:.4f}")
+        
+        if p_value < 0.05:
+            st.write(f"**Reject the null hypothesis**: There is a significant difference in completion rates between control and test group for step: {step}.")
+        else:
+            st.write(f"**Fail to reject the null hypothesis**: There is no significant difference in completion rates between control and test group for step: {step}.")
+        st.write("\n")
+
+    st.subheader("Hypothesis Test: Tenure")
+    
+    control_unique = control_group.drop_duplicates(subset='client_id')
+    test_unique = test_group.drop_duplicates(subset='client_id')
+
+    control_tenure = control_unique['clnt_tenure_yr']
+    test_tenure = test_unique['clnt_tenure_yr']
+        
+    t_stat, p_value_tenure = stats.ttest_ind(control_tenure, test_tenure, equal_var=True)
+
+    st.write(f"Average Tenure in Control group: {control_tenure.mean():.2f} years")
+    st.write(f"Average Tenure in Test group: {test_tenure.mean():.2f} years")
+    st.write(f"T-statistic: {t_stat:.4f}")
+    st.write(f"P-value: {p_value_tenure:.4f}")
+
+    if p_value_tenure < 0.05:
+        st.write("**Reject the null hypothesis**: There is a significant difference in tenure between control and test groups.")
+    else:
+        st.write("**Fail to reject the null hypothesis**: There is no significant difference in tenure between control and test groups.")
+
 def show_latest_starts(df):
+    # Filter out the 'start' process steps
     starts_only = df[df['process_step'] == 'start']
     latest_starts = starts_only.loc[starts_only.groupby('client_id')['date_time'].idxmax()]
 
+    # Filter out the 'confirm' process steps
     confirmation_only = df[df['process_step'] == 'confirm']
     latest_confirms = confirmation_only.loc[confirmation_only.groupby('client_id')['date_time'].idxmax()]
 
+    # Merge the latest start and confirm steps
     latest_start_confirms = pd.merge(latest_starts, latest_confirms, on='client_id', suffixes=('_start', '_confirm'))
 
+    # Ensure 'date_time' columns are in datetime format
+    latest_start_confirms['date_time_start'] = pd.to_datetime(latest_start_confirms['date_time_start'], errors='coerce')
+    latest_start_confirms['date_time_confirm'] = pd.to_datetime(latest_start_confirms['date_time_confirm'], errors='coerce')
+
+    # Drop rows where either 'date_time_start' or 'date_time_confirm' is NaT
+    latest_start_confirms = latest_start_confirms.dropna(subset=['date_time_start', 'date_time_confirm'])
+
+    # Calculate process duration
     latest_start_confirms['process_duration'] = latest_start_confirms['date_time_confirm'] - latest_start_confirms['date_time_start']
 
-    st.subheader("Process Duration Analysis:")
-    avg_duration = latest_start_confirms['process_duration'].mean()
-    mode_duration = latest_start_confirms['process_duration'].mode()[0]
-    median_duration = latest_start_confirms['process_duration'].median()
+    # If you want the duration in minutes
+    latest_start_confirms['process_duration_minutes'] = latest_start_confirms['process_duration'].dt.total_seconds() / 60
 
-    st.write(f"Average Duration: {avg_duration}")
-    st.write(f"Mode Duration: {mode_duration}")
-    st.write(f"Median Duration: {median_duration}")
+    st.subheader("Process Duration Analysis:")
+    avg_duration = latest_start_confirms['process_duration_minutes'].mean()
+    mode_duration = latest_start_confirms['process_duration_minutes'].mode()[0]
+    median_duration = latest_start_confirms['process_duration_minutes'].median()
+
+    st.write(f"Average Duration: {avg_duration:.2f} minutes")
+    st.write(f"Mode Duration: {mode_duration:.2f} minutes")
+    st.write(f"Median Duration: {median_duration:.2f} minutes")
 
 # Function to calculate and display completion time for each step
 def calculate_and_display_completion_time(df):
@@ -217,14 +274,73 @@ def calculate_and_display_completion_time(df):
     avg_completion_time = control_group.groupby('process_step')['completion_time_minutes'].mean().reset_index()
     st.write(avg_completion_time)
 
-# Start the Streamlit app
-st.title("Data Analysis and Visualization App")
+# Page navigation setup
+def main():
+    st.set_page_config(page_title="A/B Test Demo for Group 7")
+    
+    df = load_data()
 
-# File uploader
-uploaded_file = st.file_uploader("Upload a CSV or TXT file", type=["csv", "txt"])
+    st.sidebar.title("Navigation")
+    page = st.sidebar.radio("Select a page:", [
+        "About the Project", 
+        "Data Summary", 
+        "Unique Values", 
+        "Basic Statistics", 
+        "Demographics Analysis", 
+        "Hypothesis Testing",
+        "Process Duration Analysis",
+        "Completion Time Analysis"
+    ])
 
-# Process the file if uploaded
-if uploaded_file is not None:
-    process_file(uploaded_file)
-else:
-    st.info("Please upload a CSV or TXT file to begin analysis.")
+    if page == "About the Project":
+        show_about_project()
+
+    elif page == "Data Summary":
+        if df is not None:
+            st.subheader("CSV Data Overview")
+            st.write(f"Number of rows: {df.shape[0]}")
+            st.write(f"Number of columns: {df.shape[1]}")
+            st.write("First 5 rows of the dataset:")
+            st.dataframe(df.head())
+        else:
+            st.error("Data could not be loaded.")
+
+    elif page == "Unique Values":
+        if df is not None:
+            show_unique_values_in_categorical_columns(df)
+        else:
+            st.error("Data could not be loaded.")
+
+    elif page == "Basic Statistics":
+        if df is not None:
+            show_basic_statistics(df)
+        else:
+            st.error("Data could not be loaded.")
+
+    elif page == "Demographics Analysis":
+        if df is not None:
+            show_demographics_analysis(df)
+        else:
+            st.error("Data could not be loaded.")
+
+    elif page == "Hypothesis Testing":
+        if df is not None:
+            show_hypothesis_testing_page(df)
+        else:
+            st.error("Data could not be loaded.")
+
+    elif page == "Process Duration Analysis":
+        if df is not None:
+            show_latest_starts(df)
+        else:
+            st.error("Data could not be loaded.")
+
+    elif page == "Completion Time Analysis":
+        if df is not None:
+            calculate_and_display_completion_time(df)
+        else:
+            st.error("Data could not be loaded.")
+
+# Run the app
+if __name__ == "__main__":
+    main()
