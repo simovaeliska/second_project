@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 from scipy import stats
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # Function to load the CSV file and show information
 @st.cache_data
@@ -12,6 +14,44 @@ def load_data():
     except FileNotFoundError:
         st.error("File not found. Please check the file path.")
         return None
+
+# Function to handle different pages
+def handle_data_page(page: str, df: pd.DataFrame) -> None:
+    """
+    Handles the display of data-related pages based on user selection.
+    
+    Args:
+    page (str): The selected page from the sidebar.
+    df (pd.DataFrame): The DataFrame containing the loaded data.
+    """
+    if df is None:
+        st.error("Data could not be loaded.")
+        return
+
+    if page == "Data Summary":
+        st.subheader("CSV Data Overview")
+        st.write(f"Number of rows: {df.shape[0]}")
+        st.write(f"Number of columns: {df.shape[1]}")
+        st.write("First 5 rows of the dataset:")
+        st.dataframe(df.head())
+
+    elif page == "Unique Values":
+        show_unique_values_in_categorical_columns(df)
+
+    elif page == "Basic Statistics":
+        show_basic_statistics(df)
+
+    elif page == "Demographics Analysis":
+        show_demographics_analysis(df)
+
+    elif page == "Hypothesis Testing":
+        show_hypothesis_testing_page(df)
+
+    elif page == "Process Duration Analysis":
+        show_latest_starts(df)
+
+    elif page == "Completion Time Analysis":
+        calculate_and_display_completion_time(df)
 
 # Function to show the About the Project page
 def show_about_project():
@@ -72,7 +112,7 @@ def show_about_project():
         ## Bonus: Additional Tasks (Optional)
         If you complete all of the tasks and have some extra time before the presentation, you can explore the following additional questions and tasks:
 
-        # Client Behavior Analysis
+        Client Behavior Analysis
         Power and Effect Size
         Streamlit
         Add Streamlit to your project to achieve Customization and Real-time Analysis
@@ -106,54 +146,91 @@ def show_basic_statistics(df):
     statistics = numeric_df.describe().T  # Transpose for better readability
     st.write(statistics)
 
-# Function to show demographics analysis
-def show_demographics_analysis(df):
-    # Display column names to debug and confirm if they exist
-    st.write("Columns in the dataset:", df.columns)
+# Function to calculate and display logs_calls_accounts if necessary
+def calculate_logs_calls_accounts(df):
+    # Perform the aggregation only when necessary
+    return df.groupby(['gender', 'age_group']).agg({
+        'num_accts': 'mean',
+        'calls_6_mnth': 'mean',
+        'logons_6_mnth': 'mean'
+    }).reset_index().round(2)
 
-    # Ensure 'client_id', 'clnt_age', 'gender', and 'variation' columns exist in your DataFrame
-    required_columns = ['client_id', 'clnt_age', 'gender', 'variation']
-    missing_columns = [col for col in required_columns if col not in df.columns]
-
-    if missing_columns:
-        st.error(f"Required columns are missing: {', '.join(missing_columns)}")
-        return
+def plot_demographics(data, x, y, hue, title, ylabel, filename, linestyle='-', marker='o'):
+    """
+    Helper function to create and save a line plot for demographic data.
     
-    # Create age groups for demographics analysis
-    bins = [18, 30, 40, 50, 60, 100]  # Adjust the age ranges as needed
-    labels = ['18-29', '30-39', '40-49', '50-59', '60+']
-    
-    # Group by 'client_id' and assign age groups to 'age_group'
-    df['age_group'] = pd.cut(df['clnt_age'], bins=bins, labels=labels, right=False)
-    
-    # Group by 'client_id' and create a gender column based on 'gender'
-    df['gender_group'] = df['gender']
-    
-    # Keep 'variation' as is (without creating a separate column) to represent Test/Control groups
-    df['variation_group'] = df['variation'].apply(lambda x: 'Test' if x == 1 else 'Control')
+    Args:
+    data (DataFrame): The data to plot.
+    x (str): The column name for the x-axis.
+    y (str): The column name for the y-axis.
+    hue (str): The column name for the hue (color differentiation).
+    title (str): The title of the plot.
+    ylabel (str): The label for the y-axis.
+    filename (str): The filename to save the plot.
+    linestyle (str): The line style for the plot (default is solid).
+    marker (str): The marker style for the plot (default is 'o').
+    """
+    plt.figure(figsize=(10, 6))
+    sns.lineplot(
+        data=data,
+        x=x,
+        y=y,
+        hue=hue,
+        marker=marker,
+        linestyle=linestyle,
+        palette='coolwarm'
+    )
+    plt.title(title)
+    plt.ylabel(ylabel)
+    plt.xlabel("Age Group")
+    plt.legend(title="Gender")
+    plt.tight_layout()
+    plt.savefig(filename)
+    plt.show()
 
-    # Display age group counts by 'client_id'
-    st.subheader("Demographics: Age Groups")
-    st.write(df.groupby('client_id')['age_group'].first().value_counts())
+# New Aggregation for Number of Accounts, Calls, and Logons
+logs_calls_accounts = df.groupby(['gender', 'age_group']).agg({
+    'num_accts': 'mean',
+    'calls_6_mnth': 'mean',
+    'logons_6_mnth': 'mean'
+}).reset_index().round(2)
 
-    # Display gender group counts by 'client_id'
-    st.subheader("Demographics: Gender Distribution")
-    st.write(df.groupby('client_id')['gender_group'].first().value_counts())
+# Plot for Average Number of Accounts
+plot_demographics(
+    data=logs_calls_accounts,
+    x='age_group',
+    y='num_accts',
+    hue='gender',
+    title="Average Number of Accounts",
+    ylabel="Average Number of Accounts",
+    filename="average_accounts.png"
+)
 
-    # Display Test/Control group counts by 'client_id' using the 'variation' column
-    st.subheader("Demographics: Test/Control Group Distribution")
-    st.write(df.groupby('client_id')['variation'].first().apply(lambda x: 'Test' if x == 1 else 'Control').value_counts())
+# Plot for Calls in the Last 6 Months
+plot_demographics(
+    data=logs_calls_accounts,
+    x='age_group',
+    y='calls_6_mnth',
+    hue='gender',
+    title="Average Calls in Last 6 Months",
+    ylabel="Average Calls",
+    filename="average_calls.png",
+    linestyle='--'
+)
 
-    # Show the top 5 rows with client demographics (age, gender, variation)
-    st.subheader("Top 5 Rows of Client Demographics (Age, Gender, Group)")
-    st.write(df[['client_id', 'age_group', 'gender_group', 'variation_group']].drop_duplicates().head())
+# Plot for Logons in the Last 6 Months
+plot_demographics(
+    data=logs_calls_accounts,
+    x='age_group',
+    y='logons_6_mnth',
+    hue='gender',
+    title="Average Logons in Last 6 Months",
+    ylabel="Average Logons",
+    filename="average_logs.png",
+    linestyle=':'
+)
 
-    # Display available columns for further analysis
-    st.write(f"Available columns in the dataset: {df.columns}")
-    
-    # Display all client details (age, gender, group) if needed
-    st.subheader("Client Demographic Details")
-    st.write(df[['client_id', 'clnt_age', 'gender', 'variation']].head())
+st.write("Demographics analysis will be displayed here.")
 
 # Function for two-proportion z-test
 def two_proportion_z_test(p1, p2, n1, n2):
@@ -275,10 +352,22 @@ def calculate_and_display_completion_time(df):
     st.write(avg_completion_time)
 
 # Page navigation setup
-def main():
+def main() -> None:
+    """
+    Main function to run the Streamlit app for A/B Test Demo.
+    
+    Sets up the page configuration, loads data, and manages navigation
+    through different pages of the app.
+    """
     st.set_page_config(page_title="A/B Test Demo for Group 7")
     
+    # Ensure df is loaded here before using it
     df = load_data()
+
+    # If df is None, show an error and don't continue
+    if df is None:
+        st.error("Data could not be loaded.")
+        return
 
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Select a page:", [
@@ -292,55 +381,18 @@ def main():
         "Completion Time Analysis"
     ])
 
+    # Handle page navigation
     if page == "About the Project":
         show_about_project()
+    else:
+        handle_data_page(page, df)
 
-    elif page == "Data Summary":
-        if df is not None:
-            st.subheader("CSV Data Overview")
-            st.write(f"Number of rows: {df.shape[0]}")
-            st.write(f"Number of columns: {df.shape[1]}")
-            st.write("First 5 rows of the dataset:")
-            st.dataframe(df.head())
-        else:
-            st.error("Data could not be loaded.")
+    # Example of conditional logic if you need the logs_calls_accounts aggregation:
+    if page == "Demographics Analysis":
+        logs_calls_accounts = calculate_logs_calls_accounts(df)
+        # Now you can use logs_calls_accounts for demographics analysis
+        st.write(logs_calls_accounts)
 
-    elif page == "Unique Values":
-        if df is not None:
-            show_unique_values_in_categorical_columns(df)
-        else:
-            st.error("Data could not be loaded.")
-
-    elif page == "Basic Statistics":
-        if df is not None:
-            show_basic_statistics(df)
-        else:
-            st.error("Data could not be loaded.")
-
-    elif page == "Demographics Analysis":
-        if df is not None:
-            show_demographics_analysis(df)
-        else:
-            st.error("Data could not be loaded.")
-
-    elif page == "Hypothesis Testing":
-        if df is not None:
-            show_hypothesis_testing_page(df)
-        else:
-            st.error("Data could not be loaded.")
-
-    elif page == "Process Duration Analysis":
-        if df is not None:
-            show_latest_starts(df)
-        else:
-            st.error("Data could not be loaded.")
-
-    elif page == "Completion Time Analysis":
-        if df is not None:
-            calculate_and_display_completion_time(df)
-        else:
-            st.error("Data could not be loaded.")
-
-# Run the app
+# Run the main function when the script is executed
 if __name__ == "__main__":
     main()
