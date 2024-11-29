@@ -436,3 +436,19 @@ Additionally, the presentation slides are available in the **Slides folder** for
 The slides provide an overview of the experiment setup, hypothesis testing, key results, and actionable recommendations based on the A/B test comparing the traditional UI (Control group) with the new UI (Test group). They are designed to help stakeholders quickly grasp the main insights and decisions derived from the data analysis.
 
 Feel free to review the slides for further details, including visualizations, statistical tests, and recommendations for next steps.
+
+---
+
+## **Organization Materials**
+
+To facilitate collaboration and ensure smooth execution throughout the project, several organizational tools and resources were used:
+
+- **Project Structure Preview**: We started by outlining the structure of the project in a Google Doc to ensure alignment on goals and tasks.
+  - [**Google Doc - Project Structure Preview**](https://docs.google.com/document/d/1RWtetDbxPTHrrh62swZrF2_VPFs23U0dYrxwRwlTH9I/edit?tab=t.0)
+
+- **Kanban Board**: As the project progressed, we used a Trello board to track tasks, milestones, and progress. This helped maintain clear visibility on individual and group responsibilities.
+  - [**Trello - Kanban Board**](https://trello.com/b/UocZX25f/kanban-template)
+
+- **Collaboration and Communication**: We held regular check-ins and point-of-work meetings to share progress, review work, and identify any challenges. Whenever we encountered roadblocks, we either sought assistance from team members or conducted independent and group research to resolve issues.
+  
+These tools helped streamline the workflow and fostered collaboration across different stages of the project.
