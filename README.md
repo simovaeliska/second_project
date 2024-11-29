@@ -452,3 +452,44 @@ To facilitate collaboration and ensure smooth execution throughout the project, 
 - **Collaboration and Communication**: We held regular check-ins and point-of-work meetings to share progress, review work, and identify any challenges. Whenever we encountered roadblocks, we either sought assistance from team members or conducted independent and group research to resolve issues.
   
 These tools helped streamline the workflow and fostered collaboration across different stages of the project.
+
+---
+
+## **Streamlit App**
+
+The development of the **Streamlit app** went through several iterations, organizational changes, and challenges before we arrived at the current structure. These iterations were necessary due to the complexity of the data and the dynamic nature of the A/B test results we were working with.
+
+### **Development Challenges**
+- **Initial Designs**: The first versions of the app were simple, but we quickly encountered limitations in scalability and functionality. As the complexity of the experiment grew, it became clear that the app would need more structured navigation and interactive features to accommodate a range of analysis.
+- **Reorganization**: The app structure underwent several revisions, adjusting both the layout and the organization of different pages to better serve the data visualization needs. This process was iterative and required refining of how the data would be presented to users.
+- **Technical Issues**: During development, there were multiple technical hurdles related to performance, data loading, and the integration of different components. These issues required debugging and adapting the code to ensure smooth user interactions, particularly for large datasets.
+- **Complexity of Implementation**: As new features were added (such as hypothesis testing, demographic analysis, and error rate tracking), it became increasingly complex to implement and maintain the app. Despite these challenges, the final iteration provides a more robust and dynamic user experience.
+
+### **App Structure**
+
+The app is now organized as follows:
+
+- **Main Script**: 
+  - `app.py`: The entry point to the app, handling navigation and page routing.
+  
+- **Pages**: Each page focuses on a specific analysis or dataset, and includes interactive visualizations.
+  - `about.py`: Overview of the project and its objectives.
+  - `summary.py`: Summary of the dataset used in the experiment.
+  - `unique_values.py`: Exploration of unique values in key columns.
+  - `stats.py`: Basic statistics of the experiment data.
+  - `demographics.py`: Analysis of user demographics.
+  - `duration.py`: Page dedicated to analyzing the duration of user interactions.
+  - `hypothesis.py`: Displays results of hypothesis testing.
+  - `completion.py`: Examines completion times for tasks.
+  - `bounce_rate.py`: Visualizes and analyzes bounce rates.
+  - `error_rate.py`: Presents error rates and analysis of issues encountered.
+
+- **Utility Functions**:
+  - `utils_`: A folder containing helper functions, such as `display.py`, for rendering data and visualizations across pages.
+
+### **Interactive Features**
+Despite the challenges, the final version of the app provides a dynamic and interactive interface. Users can explore different aspects of the A/B test, including key metrics, statistical results, and demographic insights, in real-time. The interactive visualizations help stakeholders make data-driven decisions by allowing them to engage directly with the results.
+
+- [**Vanguard UI Experiment - Streamlit App**](#) *(Insert actual link to the deployed app)*
+
+This app complements the presentation slides by offering a more hands-on, engaging experience for exploring the data and results.
