@@ -1,0 +1,13 @@
+gender,age_group,num_accts,calls_6_mnth,logons_6_mnth
+Female,Under 30,2.25,3.16,5.02
+Female,30-39,2.23,2.83,5.02
+Female,40-49,2.23,2.91,5.05
+Female,50 and above,2.22,3.23,5.53
+Male,Under 30,2.31,3.81,5.7
+Male,30-39,2.33,3.55,5.74
+Male,40-49,2.31,3.45,5.58
+Male,50 and above,2.34,3.84,6.12
+Unknown,Under 30,2.25,3.53,5.56
+Unknown,30-39,2.24,3.2,5.5
+Unknown,40-49,2.19,3.07,5.19
+Unknown,50 and above,2.16,3.35,5.64
